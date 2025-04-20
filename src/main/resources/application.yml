@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    url: jdbc:mariadb://localhost:3306/chatdb?useSSL=false
+    username: root
+    password: dkssud3857!!
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show_sql: true
+
+jwt:
+  # chatserversecretaccesstokenchatserversecretaccesstokenchatserversecretaccesstoken
+  secretKey: Y2hhdHNlcnZlcnNlY3JldGFjY2Vzc3Rva2VuY2hhdHNlcnZlcnNlY3JldGFjY2Vzc3Rva2VuY2hhdHNlcnZlcnNlY3JldGFjY2Vzc3Rva2Vu
+  expiration: 3000 # 3000분 (분단위)
