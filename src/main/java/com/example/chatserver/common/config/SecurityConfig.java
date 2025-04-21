@@ -34,7 +34,7 @@ public class SecurityConfig {
 			.csrf(AbstractHttpConfigurer::disable) // csrf 비활성
 			.httpBasic(AbstractHttpConfigurer::disable) // HTTP Basic 비활성화 - 보안 인증 방법 중 하나
 			// 특정 URL 패턴에 대해서는 Authentication 객체 요구하지 않겠다. (인증처리 제외)
-			.authorizeHttpRequests(auth -> auth.requestMatchers("/member/create", "/member/doLogin", "/connect").permitAll().anyRequest().authenticated()) // 인증처리 하지 않을 사이트
+			.authorizeHttpRequests(auth -> auth.requestMatchers("/member/create", "/member/doLogin", "/connect/**").permitAll().anyRequest().authenticated()) // 인증처리 하지 않을 사이트
 			.sessionManagement( session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS )) // 세션방식을 사용하지 않겠다는 의미 ( 우리는 토큰 방식을 사용할 것!! )
 			.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) // 특정 URL에 대해서는 jwtAuthFilter에 가서 토큰을 만들어주기
 			.build();
@@ -57,7 +57,6 @@ public class SecurityConfig {
 
 	@Bean
 	public PasswordEncoder passwordEncoder(){
-
 		return PasswordEncoderFactories.createDelegatingPasswordEncoder();
 	}
 
