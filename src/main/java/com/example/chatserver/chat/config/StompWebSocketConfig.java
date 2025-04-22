@@ -7,15 +7,14 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
+@RequiredArgsConstructor
 @EnableWebSocketMessageBroker // Broker 가 존재한다면 -> stomp 다.
 public class StompWebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
 	private final StompHandler stompHandler;
-
-	public StompWebSocketConfig(StompHandler stompHandler) {
-		this.stompHandler = stompHandler;
-	}
 
 	@Override
 	public void registerStompEndpoints(StompEndpointRegistry registry) {

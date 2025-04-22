@@ -2,21 +2,20 @@ package com.example.chatserver.chat.controller;
 
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 
 import com.example.chatserver.chat.dto.ChatMessageReqDto;
+import com.example.chatserver.chat.service.ChatService;
+
+import lombok.RequiredArgsConstructor;
 
 @Controller
+@RequiredArgsConstructor
 public class StompController {
 
-
+	private final ChatService chatService;
 	private final SimpMessageSendingOperations messageTemplate;
-
-	public StompController(SimpMessageSendingOperations messageTemplate) {
-		this.messageTemplate = messageTemplate;
-	}
 
 	// 방법1. MessageMapping(수신) 과 SendTo(topic에 메시지 전달) 한꺼번에 처리
 
@@ -35,6 +34,8 @@ public class StompController {
 	@MessageMapping("/{roomId}")
 	public void sendMessage(@DestinationVariable Long roomId, ChatMessageReqDto chatMessageReqDto ){
 		System.out.println(chatMessageReqDto.getMessage());
+
+		chatService.saveMessage(roomId, chatMessageReqDto);
 		messageTemplate.convertAndSend("/topic/" + roomId, chatMessageReqDto);
 
 	}
