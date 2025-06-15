@@ -5,7 +5,7 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Controller;
 
-import com.example.chatserver.chat.dto.ChatMessageReqDto;
+import com.example.chatserver.chat.dto.ChatMessageDto;
 import com.example.chatserver.chat.service.ChatService;
 
 import lombok.RequiredArgsConstructor;
@@ -32,11 +32,11 @@ public class StompController {
 	// WHY ? 어노테이션을 쓰면 코드의 유연성이 떨어짐 ! 따라서 직접 토픽에 메시지를ㄹ 전달하겠다 !
 
 	@MessageMapping("/{roomId}")
-	public void sendMessage(@DestinationVariable Long roomId, ChatMessageReqDto chatMessageReqDto ){
-		System.out.println(chatMessageReqDto.getMessage());
+	public void sendMessage(@DestinationVariable Long roomId, ChatMessageDto chatMessageDto ){
+		System.out.println(chatMessageDto.getMessage());
 
-		chatService.saveMessage(roomId, chatMessageReqDto);
-		messageTemplate.convertAndSend("/topic/" + roomId, chatMessageReqDto);
+		chatService.saveMessage(roomId, chatMessageDto);
+		messageTemplate.convertAndSend("/topic/" + roomId, chatMessageDto);
 
 	}
 

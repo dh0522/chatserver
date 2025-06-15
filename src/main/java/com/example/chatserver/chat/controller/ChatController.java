@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.chatserver.chat.domain.ChatRoom;
+import com.example.chatserver.chat.dto.ChatMessageDto;
 import com.example.chatserver.chat.dto.ChatRoomListResDto;
 import com.example.chatserver.chat.service.ChatService;
 
@@ -46,5 +47,21 @@ public class ChatController {
 	public ResponseEntity<?> joinGroupChatRoom(@PathVariable Long roomId){
 		chatService.addParticipantToGroupChat(roomId);
 		return ResponseEntity.ok().build();
+	}
+
+	// 이전 메시지 조회
+	@GetMapping("/history/{roomId}")
+	public ResponseEntity<?> getChatHistory(@PathVariable Long roomId ){
+
+		List<ChatMessageDto> chatMessageDtos = null;
+
+		try{
+			chatMessageDtos = chatService.getChatHistory(roomId);
+
+		}catch (Exception e){
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
+
+		return new ResponseEntity<>(chatMessageDtos, HttpStatus.OK);
 	}
 }

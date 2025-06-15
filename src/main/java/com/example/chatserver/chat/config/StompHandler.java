@@ -8,13 +8,23 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
-import io.jsonwebtoken.Jwts;
+import com.example.chatserver.chat.repository.ChatRoomRepository;
+import com.example.chatserver.chat.service.ChatService;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 @Component // 인증 작엄: 토큰을 꺼내서 우리가 만들어준 토큰이 맞는지 검증해준다.
 public class StompHandler implements ChannelInterceptor  {
 
+	private final ChatService chatService;
+	private final ChatRoomRepository chatRoomRepository;
+
 	@Value("${jwt.secretKey}")
 	private String secretKey;
+
 
 
 	@Override
@@ -41,6 +51,27 @@ public class StompHandler implements ChannelInterceptor  {
 		}
 
 
+		// 요청을 보낸 user 가 해당 채팅방의 참여자인지 여부 확인
+		if (StompCommand.SUBSCRIBE == accessor.getCommand()){
+			System.out.println("subscribe 검증 ");
+
+			String bearerToken = accessor.getFirstNativeHeader("Authorization");
+			String token = bearerToken.substring(7);
+
+			Claims claims = Jwts.parserBuilder()
+				.setSigningKey(secretKey)
+				.build()
+				.parseClaimsJws(token)
+				.getBody();
+
+			String email = claims.getSubject();
+			String roomId = accessor.getDestination().split("/")[2];
+
+			if(!chatService.isRoomParticipant(email, Long.parseLong(roomId))){
+				throw new IllegalArgumentException("해당 채팅방의 참여자가 아닙니다.");
+			}
+
+		}
 		return message;
 	}
 

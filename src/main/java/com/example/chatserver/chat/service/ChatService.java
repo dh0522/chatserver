@@ -12,7 +12,7 @@ import com.example.chatserver.chat.domain.ChatMessage;
 import com.example.chatserver.chat.domain.ChatParticipant;
 import com.example.chatserver.chat.domain.ChatRoom;
 import com.example.chatserver.chat.domain.ReadStatus;
-import com.example.chatserver.chat.dto.ChatMessageReqDto;
+import com.example.chatserver.chat.dto.ChatMessageDto;
 import com.example.chatserver.chat.dto.ChatRoomListResDto;
 import com.example.chatserver.chat.repository.ChatMessageRepository;
 import com.example.chatserver.chat.repository.ChatParticipantRepository;
@@ -34,7 +34,7 @@ public class ChatService {
 	private final ReadStatusRepository readStatusRepository;
 	private final MemberRepository memberRepository;
 
-	public void saveMessage(Long roomId, ChatMessageReqDto chatMessageReqDto){
+	public void saveMessage(Long roomId, ChatMessageDto chatMessageDto){
 		// 해당 메시지가 어떤 room 으로 (송신자 + 내용) 으로 전달되는지 저장한다.
 		// 1. 채팅방 조회
 		ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(
@@ -42,7 +42,7 @@ public class ChatService {
 		);
 
 		// 2. 보낸 사람 조회
-		Member sender = memberRepository.findByEmail(chatMessageReqDto.getSenderEmail()).orElseThrow(
+		Member sender = memberRepository.findByEmail(chatMessageDto.getSenderEmail()).orElseThrow(
 			() -> new EntityNotFoundException("해당 멤버를 찾을 수 없습니다.")
 		);
 
@@ -50,7 +50,7 @@ public class ChatService {
 		ChatMessage chatMessage = ChatMessage.builder()
 			.chatRoom(chatRoom)
 			.member(sender)
-			.content(chatMessageReqDto.getMessage())
+			.content(chatMessageDto.getMessage())
 			.build();
 
 		chatMessageRepository.save(chatMessage);
@@ -150,6 +150,68 @@ public class ChatService {
 		chatParticipantRepository.save(chatParticipant);
 	}
 
+	// 특정 Room 에 대한 message 조회
+	/// 내가 해당 채팅방의 참여자가 아닌 경우 에러가 발생해야 함.
+	public List<ChatMessageDto> getChatHistory(Long roomId){
+
+		// 1. 채팅방 조회
+		ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(
+			() -> new IllegalArgumentException("해당하는 채팅방이 없습니다.")
+		);
+
+		// 2. 해당 채팅방의 유저 조회
+		// 1) 로그인한 유저
+		Member member = memberRepository.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName())
+			.orElseThrow(
+				() -> new IllegalArgumentException("로그인한 유저가 없습니다.")
+			);
+
+		List<ChatParticipant> chatParticipants = chatParticipantRepository.findByChatRoom(chatRoom);
+		boolean check = false;
+
+		for (ChatParticipant c : chatParticipants) {
+			if (c.getMember().equals(member)){
+				check = true;
+			}
+		}
+
+		if (!check){
+			throw new IllegalArgumentException("본인이 속하지 않는 채팅방입니다.");
+		}
+
+		List<ChatMessage> chatMessages = chatMessageRepository.findByChatRoomOrderByCreatedTimeAsc(chatRoom);
+
+		return chatMessages.stream()
+			.map(c -> ChatMessageDto.builder()
+				.message(c.getContent())
+				.senderEmail(c.getMember().getEmail())
+				.build())
+			.toList();
+
+	}
+
+
+	public boolean isRoomParticipant(String email, Long roomId){
+
+		ChatRoom chatRoom = chatRoomRepository.findById(roomId).orElseThrow(
+			() -> new IllegalArgumentException("해당 채팅방이 없습니다.")
+		);
+
+		Member member = memberRepository.findByEmail(email).orElseThrow(
+			() -> new IllegalArgumentException("no member")
+		);
+
+		List<ChatParticipant> chatParticipants = chatParticipantRepository.findByChatRoom(chatRoom);
+
+		for (ChatParticipant c : chatParticipants) {
+			if (c.getMember().equals(member)){
+				return true;
+			}
+		}
+
+		return false;
+
+	}
 }
 
 
